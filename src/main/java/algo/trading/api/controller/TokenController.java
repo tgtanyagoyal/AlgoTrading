@@ -1,5 +1,6 @@
 package algo.trading.api.controller;
 
+import algo.trading.api.dto.Response;
 import algo.trading.api.service.TokenService;
 import com.zerodhatech.kiteconnect.kitehttp.exceptions.KiteException;
 import org.springframework.http.HttpStatus;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api")
 public class TokenController {
+
 	private final TokenService tokenService;
 
 	public TokenController(TokenService tokenService) {
@@ -17,17 +19,16 @@ public class TokenController {
 	}
 
 	@GetMapping("/token")
-	public ResponseEntity<TokenResponse> handleToken(
+	public ResponseEntity<Response> handleToken(
 			@RequestHeader("requestToken") String requestToken) throws KiteException {
 
 		if (!StringUtils.hasText(requestToken)) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-					.body(new TokenResponse("", "requestToken is required"));
+					.body(new Response(HttpStatus.BAD_REQUEST.value(), "RequestToken is required",null));
 		}
 
 		String result = tokenService.processToken(requestToken);
-		return ResponseEntity.ok(new TokenResponse(requestToken, result));
+		return ResponseEntity.ok(new Response(0,"Response fetched successfully",result));
 	}
 
-	public record TokenResponse(String requestToken, String result) {}
 }

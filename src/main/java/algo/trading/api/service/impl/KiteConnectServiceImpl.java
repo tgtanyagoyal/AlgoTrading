@@ -1,25 +1,33 @@
 package algo.trading.api.service.impl;
 
+import algo.trading.api.config.KiteConnectConfig;
 import algo.trading.api.service.KiteConnectService;
+import com.zerodhatech.kiteconnect.KiteConnect;
+import com.zerodhatech.models.Profile;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.json.JSONException;
 import java.io.IOException;
-import com.zerodhatech.kiteconnect.KiteConnect;
 import com.zerodhatech.kiteconnect.kitehttp.SessionExpiryHook;
 import com.zerodhatech.kiteconnect.kitehttp.exceptions.KiteException;
 import com.zerodhatech.models.User;
 
 @Service
 public class KiteConnectServiceImpl implements KiteConnectService {
+    private final KiteConnect kiteConnect;
+    private final String apiSecret;
+
+    public KiteConnectServiceImpl(
+            KiteConnect kiteConnect,
+            @Value("${kite.apiSecret}") String apiSecret) {
+        this.kiteConnect = kiteConnect;
+        this.apiSecret = apiSecret;
+    }
 
     @Override
     public void kiteConnect(String requestToken) throws KiteException {
         try {
-
-            KiteConnect kiteConnect = new KiteConnect("kphy76pqgmz5zkw1");
-
-            kiteConnect.setUserId("JWR763");
-
             String url = kiteConnect.getLoginURL();
 
             kiteConnect.setSessionExpiryHook(new SessionExpiryHook() {
@@ -29,13 +37,11 @@ public class KiteConnectServiceImpl implements KiteConnectService {
                 }
             });
 
-            User user =  kiteConnect.generateSession(requestToken, "lstun8cx3d698wfc4aqsz941eqgiz1aw");
+            User user =  kiteConnect.generateSession(requestToken, apiSecret);
             kiteConnect.setAccessToken(user.accessToken);
             kiteConnect.setPublicToken(user.publicToken);
 
-//            TestingService examples = new TestingService();
-
-//            examples.getProfile(kiteConnect);
+            getProfile(kiteConnect);
 
         } catch (KiteException e) {
             System.out.println(e.message+" "+e.code+" "+e.getClass().getName());
@@ -47,6 +53,11 @@ public class KiteConnectServiceImpl implements KiteConnectService {
         }catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void getProfile(KiteConnect kiteConnect) throws IOException, KiteException {
+        Profile profile = kiteConnect.getProfile();
+        System.out.println(profile.userName);
     }
 
 }
